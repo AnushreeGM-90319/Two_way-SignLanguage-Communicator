@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+opencv-python
+mediapipe
+torch
+torchaudio
+transformers
+pyttsx3
+python-multipart
