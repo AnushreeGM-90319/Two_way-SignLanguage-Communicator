@@ -2,6 +2,8 @@
 venv/
 .venv/
 
+sign_model.pth
+
 # Python cache
 __pycache__/
 *.pyc
@@ -12,7 +14,7 @@ __pycache__/
 .env
 
 # Dataset (VERY IMPORTANT)
-data/
+MP_Data
 
 # VS Code settings
 .vscode/
@@ -28,3 +30,4 @@ Thumbs.db
 *.h5
 *.pt
 *.pth
+
