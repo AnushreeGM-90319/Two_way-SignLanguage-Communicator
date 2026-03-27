@@ -2,7 +2,8 @@
 venv/
 .venv/
 
-sign_model.pth
+backend/MP_Data/
+backend/*.pth
 
 # Python cache
 __pycache__/
@@ -13,8 +14,7 @@ __pycache__/
 # Environment variables
 .env
 
-# Dataset (VERY IMPORTANT)
-MP_Data
+
 
 # VS Code settings
 .vscode/
