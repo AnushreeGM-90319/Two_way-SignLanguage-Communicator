@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Communicator</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;700&display=swap');
+        body { font-family: 'Outfit', sans-serif; background: #0f2027; color: white; text-align: center; padding: 20px; }
+        .panel { background: rgba(255,255,255,0.05); padding: 20px; border-radius: 20px; max-width: 600px; margin: auto; }
+        #webcam { width: 100%; border-radius: 15px; transform: scaleX(-1); border: 2px solid #00f2fe; }
+        #live-prediction { font-size: 3rem; font-weight: bold; color: #00f2fe; margin: 15px; height: 50px; }
+        
+        /* Chat Box Styles */
+        #chat-box { 
+            background: rgba(0,0,0,0.3); height: 200px; overflow-y: auto; 
+            padding: 15px; border-radius: 15px; text-align: left; 
+            display: flex; flex-direction: column; gap: 8px; margin-top: 20px;
+        }
+        .comment { 
+            background: #0072ff; padding: 8px 15px; border-radius: 10px; 
+            width: fit-content; animation: slideUp 0.3s ease; font-weight: bold;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .btn { background: #0072ff; color: white; border: none; padding: 12px 25px; border-radius: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="panel" id="main-menu">
+        <h1>💬 AI Communicator</h1>
+        <button class="btn" onclick="startSignerMode()">Start Signer Mode</button>
+    </div>
+
+    <div class="panel" id="mode-signer" style="display:none;">
+        <div id="live-prediction">...</div>
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="canvas" width="320" height="240" style="display:none;"></canvas>
+        
+        <div id="chat-box"></div>
+        <br>
+        <button class="btn" style="background:red;" onclick="location.reload()">Back</button>
+    </div>
+
+    <script>
+        let video = document.getElementById('webcam');
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let ws = null;
+        let lastLogged = "";
+        let stableCounter = 0;
+
+        async function startSignerMode() {
+            document.getElementById('main-menu').style.display = 'none';
+            document.getElementById('mode-signer').style.display = 'block';
+
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video.srcObject = stream;
+            
+            ws = new WebSocket("ws://localhost:8000/ws/sign");
+            ws.onopen = () => captureAndSend();
+            ws.onmessage = (event) => {
+                let data = JSON.parse(event.data);
+                let pred = data.prediction;
+                document.getElementById('live-prediction').innerText = pred.toUpperCase();
+
+                if (pred !== "..." && pred !== lastLogged) {
+                    stableCounter++;
+                    if (stableCounter > 10) { 
+                        addComment(pred);
+                        speak(pred);
+                        lastLogged = pred;
+                        stableCounter = 0;
+                    }
+                } else if (pred === "...") {
+                    stableCounter = 0;
+                }
+
+                requestAnimationFrame(captureAndSend);
+            };
+        }
+
+        function addComment(text) {
+            let div = document.createElement('div');
+            div.className = 'comment';
+            div.innerText = "👤 " + text.toUpperCase();
+            let box = document.getElementById('chat-box');
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function captureAndSend() {
+            if (ws && ws.readyState === WebSocket.OPEN && video.readyState >= 2) {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ws.send(canvas.toDataURL('image/jpeg', 0.5));
+            }
+        }
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            let m = new SpeechSynthesisUtterance(text);
+            m.rate = 1.1;
+            window.speechSynthesis.speak(m);
+        }
+    </script>
+</body>
+</html>

@@ -3,13 +3,13 @@ import numpy as np
 import os
 import mediapipe as mp
 
-# --- CONFIGURATION ---
-DATA_PATH = os.path.join('MP_Data') 
+# CONFIGURATION
+DATA_PATH = os.path.join('MP_Data')
 actions = np.array(['hello', 'thankyou', 'iloveyou', 'yes', 'no', 'help', 'sorry', 'please', 'okay'])
-no_sequences = 30
+no_sequences = 120
 sequence_length = 30
 
-# --- MEDIAPIPE SETUP ---
+# MEDIAPIPE SETUP
 mp_holistic = mp.solutions.holistic
 mp_drawing = mp.solutions.drawing_utils
 
@@ -17,7 +17,7 @@ def extract_landmarks(results):
     # Upper body pose indices
     upper_body_indices = [0, 11, 12, 13, 14, 15, 16]
 
-    # Pose (only selected upper body points)
+    # Pose
     if results.pose_landmarks:
         pose = np.array([
             [results.pose_landmarks.landmark[i].x,
@@ -44,8 +44,6 @@ with mp_holistic.Holistic(min_detection_confidence=0.5, min_tracking_confidence=
             if os.path.exists(check_path):
                 print(f"Skipping {action} video {sequence} (Already recorded)")
                 continue # Skip to the next video
-
-            # Ensure folder exists
             os.makedirs(os.path.join(DATA_PATH, action, str(sequence)), exist_ok=True)
 
             # --- WAIT FOR USER TO PRESS 'S' ---
